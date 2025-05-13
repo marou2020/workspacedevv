@@ -18,10 +18,27 @@ components:
       volumeMounts:
         - name: npm
           path: /home/user/.npm
+        - name: shared-data
+          path: /projects/web-nodejs-k8s-manifests
   - name: npm
     volume:
       size: 1G
+  - name: shared-data
+    volume:
+      size: 1Gi
+
 commands:
+  - id: clone-k8s-manifests
+    exec:
+      label: "Cloner le repo web-nodejs-k8s-manifests"
+      component: tools
+      commandLine: >
+        git clone https://github.com/marou2020/web-nodejs-k8s-manifests.git /projects/web-nodejs-k8s-manifests
+      workingDir: /projects
+      group:
+        kind: preStart
+        isDefault: true
+
   - id: 1-dependencies
     exec:
       label: "Download dependencies"
@@ -60,8 +77,9 @@ commands:
       label: "Stop the web app"
       component: tools
       commandLine: >-
-          node_server_pids=$(pgrep -fx '.*nodemon (--inspect )?app.js' | tr "\\n" " ") &&
-          echo "Stopping node server with PIDs: ${node_server_pids}" && 
-          kill -15 ${node_server_pids} &>/dev/null && echo 'Done.'
+        node_server_pids=$(pgrep -fx '.*nodemon (--inspect )?app.js' | tr "\\n" " ") &&
+        echo "Stopping node server with PIDs: ${node_server_pids}" &&
+        kill -15 ${node_server_pids} &>/dev/null && echo 'Done.'
       group:
         kind: run
+
